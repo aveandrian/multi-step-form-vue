@@ -1,0 +1,765 @@
+<script setup>
+import { ref, watch } from 'vue';
+import Step1 from './components/Step1.vue';
+import Step2 from './components/Step2.vue';
+import Step3 from './components/Step3.vue';
+import Step4 from './components/Step4.vue';
+import Step5 from './components/Step5.vue'
+
+const planMonthlyPrices = {
+  arcade: 9,
+  advanced: 12,
+  pro: 15
+}
+
+const addonMonthlyPrices = {
+  service: 1,
+  storage: 2,
+  customProfile: 2
+}
+
+const step = ref(1)
+const total = ref(0)
+const formData = ref({
+  personalInfo: {
+    name: "",
+    email: "",
+    phone: ""
+  },
+  plan: {
+    planName: '',
+    isYearly: false
+  },
+  addons: {
+    service: false,
+    storage: false,
+    customProfile: false
+  },
+})
+
+const calculateTotal = () => {
+  let totalPrice = formData.value.plan.isYearly ? planMonthlyPrices[formData.value.plan.planName]*10 : planMonthlyPrices[formData.value.plan.planName];
+  for (let key in formData.value.addons) {
+      if(formData.value.addons[key]){
+        let addonPrice = formData.value.plan.isYearly ? addonMonthlyPrices[key]*10 : addonMonthlyPrices[key]
+        totalPrice+=addonPrice
+      }
+    }
+  total.value = totalPrice;
+};
+
+watch(() => formData.value.plan, calculateTotal, { deep: true });
+watch(() => formData.value.addons, calculateTotal, { deep: true });
+
+function nextStep(){
+  step.value++
+}
+function prevStep(){
+  step.value--
+}
+
+function selectPlan(planName){
+  formData.value.plan.planName = planName
+}
+
+function togglePlan(){
+  formData.value.plan.isYearly = !formData.value.plan.isYearly
+}
+
+function addonSelect(addonName){
+  formData.value.addons[addonName] = !formData.value.addons[addonName]
+}
+
+function changeStep(stepNumber){
+  step.value = stepNumber
+}
+
+</script>
+
+<template>
+ <main>
+        <section class='sidebar'>
+          <div class='step-item'>
+            <div class='step-number' :class="{active: step == 1}">1</div>
+            <div class='step-text'>
+              <p class='sidebar-step-title'>Step 1</p>
+              <p class='sidebar-step-description'>Your info</p>
+            </div>
+          </div>
+          <div class='step-item'>
+            <div class='step-number' :class="{active: step == 2}">2</div>
+            <div class='step-text'>
+              <p class='sidebar-step-title'>Step 2</p>
+              <p class='sidebar-step-description'>Select plan</p>
+            </div>
+          </div>
+          <div class='step-item'>
+            <div class='step-number' :class="{active: step == 3}">3</div>
+            <div class='step-text'>
+              <p class='sidebar-step-title'>Step 3</p>
+              <p class='sidebar-step-description'>Add-ons</p>
+            </div>
+          </div>
+          <div class='step-item'>
+            <div class='step-number' :class="{active: step > 3}">4</div>
+            <div class='step-text'>
+              <p class='sidebar-step-title'>Step 4</p>
+              <p class='sidebar-step-description'>Summary</p>
+            </div>
+          </div>
+        </section>
+        <section class='step-section'>
+          <Step1 v-if="step === 1" :formData="formData" step='personalInfo' :nextStep="nextStep"/>
+          <Step2 
+            v-if="step === 2" 
+            :formData="formData" 
+            step='plan' 
+            :nextStep="nextStep" 
+            :prevStep="prevStep" 
+            :prices="planMonthlyPrices" 
+            @changePlan="selectPlan"
+            @togglePlan="togglePlan"
+          />
+          <Step3 
+            v-if="step === 3" 
+            :formData="formData" 
+            step='addons'
+            :nextStep="nextStep" 
+            :prevStep="prevStep" 
+            :prices="addonMonthlyPrices"
+            @selectAddon="addonSelect"
+          />
+          <Step4 
+            v-if="step === 4" 
+            :formData="formData" 
+            @changeStep="changeStep" 
+            :nextStep="nextStep" 
+            :prevStep="prevStep"
+            :total="total"
+            :planMonthlyPrices="planMonthlyPrices" 
+            :addonMonthlyPrices="addonMonthlyPrices"
+          />
+          <Step5  v-if="step === 5" /> 
+        </section>
+      </main>
+      <div class="attribution">
+        Challenge by <a href="https://www.frontendmentor.io?ref=challenge" target="_blank">Frontend Mentor</a>. 
+        Coded by <a href="https://github.com/aveandrian">aveandrian</a>.
+      </div>
+</template>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Ubuntu', sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: #EEF5FF;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+main {
+  width: 56.25rem;
+  height: 80vh;
+  display: flex;
+  gap: 2vw;
+  padding: 1.25rem ;
+  border-radius: 1.25rem ;
+  background: white;
+}
+
+.step-container, .personal-info-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar {
+  width: 35%;
+  padding: 1.25rem ;
+  padding-block: 2.5rem ;
+  border-radius: 1.25rem ;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem ;
+  background: url('/images/bg-sidebar-desktop.svg');
+  background-size: cover;
+}
+
+.next-step-btn {
+  padding: 0.938rem  1.875rem ;
+  border: none;
+  border-radius: 0.313rem ;
+  font-weight: 500;
+}
+
+.prev-step-btn {
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  color: hsl(231, 11%, 63%)
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem ;
+}
+
+.step-number {
+  border-radius: 50%;
+  border: 0.063rem solid white;
+  color: white;
+  width: 2.5rem ;
+  height: 2.5rem ;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.step-number.active {
+  color: hsl(213, 96%, 18%);
+  background-color:  #BDE1FF;
+  border: none;
+}
+
+.step-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-step-title {
+  text-transform: uppercase;
+  color: hsl(229, 24%, 87%);
+}
+
+.sidebar-step-description {
+  text-transform: uppercase;
+  font-weight: 700;
+  color: white;
+}
+
+.step-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.step-container {
+  padding: 3.125rem 1.25rem ;
+  padding-bottom: 1.25rem ;
+  height: 100%;
+}
+
+.step-buttons-container {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  padding-inline: 1.25rem ;
+}
+
+.next-step-btn {
+  background: #03295A;
+  color: white;
+  margin-left: auto;
+}
+
+.next-step-btn:hover, .prev-step-btn:hover {
+  cursor: pointer;
+}
+
+.next-step-btn:hover {
+  background-color: #174A8B;
+}
+
+.next-step-btn.confirm {
+  background-color: #483EFF;
+}
+
+.next-step-btn.confirm:hover {
+  background-color: #938CFE;
+}
+
+.prev-step-btn:hover {
+  color: #03295A;
+}
+
+.step-title {
+  font-size: 2rem;
+  color: hsl(213, 96%, 18%);
+}
+
+.step-description {
+  color: hsl(231, 11%, 63%);
+  font-size: 1.1rem;
+  margin-bottom: 4vh;
+}
+
+.personal-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2vh
+}
+
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem ;
+}
+
+.input-label-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.input-wrapper input {
+  height: 3.125rem ;
+  border-radius: 0.313rem ;
+  border: 0.063rem solid hsl(231, 11%, 63%);
+  text-indent: 0.625rem ;
+  font-weight: 500;
+  color: hsl(213, 96%, 18%);
+}
+
+.input-wrapper input:focus {
+  outline: 0.063rem solid blue;
+}
+ 
+.input-wrapper input.input-error {
+  border: 0.063rem solid red;
+}
+
+.input-label-container label {
+  color: hsl(213, 96%, 18%);
+}
+
+.error {
+  color: red;
+  font-weight: 700;
+}
+
+
+.plan-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2vh;
+}
+
+.plan-cards-wrapper {
+  display: flex;
+  gap: 1vw;
+}
+
+.plan-card {
+  flex: 1;
+  min-height: 20vh;
+  height: fit-content;
+  display: flex;
+  gap: 0.313rem ;
+  flex-direction: column;
+  align-items: start;
+  border-radius: 0.625rem ;
+  padding: 1.25rem 0.625rem ;
+  border: 0.063rem solid hsl(231, 11%, 63%);
+}
+
+.plan-card.active {
+  background-color: #F8F9FE;
+  border: 0.063rem solid hsl(213, 96%, 18%);
+}
+
+.plan-card:hover {
+  cursor: pointer;
+  border: 0.063rem solid hsl(213, 96%, 18%);
+}
+
+.plan-icon {
+  margin-bottom: 5vh;
+}
+
+.plan-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem ;
+}
+
+.plan-title {
+  color: hsl(213, 96%, 18%);;
+}
+
+.plan-price {
+  color: hsl(231, 11%, 63%);
+}
+
+.plan-bonus {
+  font-weight: 500;
+  color: hsl(213, 96%, 18%);;
+}
+
+.slider-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1vw;
+  padding: 1.25rem ;
+  border-radius: 0.625rem ;
+  background: #F8F9FE;
+  font-weight: 700;
+}
+
+
+.slider-wrapper p {
+  color: hsl(231, 11%, 63%);
+}
+
+.slider-wrapper p.active {
+  color: hsl(213, 96%, 18%);
+}
+
+.slider {
+  width: 3.125rem ;
+  height: 1.563rem ;
+  border-radius: 1.875rem ;
+  padding: 0.313rem ;
+  background: #03295A;
+  display: flex;
+  align-items: center;
+}
+
+.slider:hover {
+  cursor: pointer;
+}
+
+
+.slider-circle {
+  height: 0.938rem ;
+  width: 0.938rem ;
+  background-color: white;
+  border-radius: 50%;
+  position: relative;
+  left: 0;
+  transition: 0.3s ease-in-out;
+}
+
+.slider-circle.yearly {
+  left: 100%;
+  transform: translateX(-100%);
+}
+
+.addons-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2vh
+}
+
+.addon-item {
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+  padding: 1.25rem 1.875rem ;
+  border-radius: 0.625rem ;
+  border: 0.063rem solid hsl(231, 11%, 63%);
+}
+
+.addon-item.selected {
+  background-color: #F8F9FE;
+  border: 0.063rem solid #4C4299;
+}
+
+.addon-item:hover {
+  cursor: pointer;
+  border: 0.063rem solid #4C4299;
+}
+
+.addon-title {
+  font-weight: 700;
+  font-size: 1.125rem ;
+  color: hsl(213, 96%, 18%);
+}
+
+.addon-text {
+  color: hsl(231, 11%, 63%);
+}
+
+.addon-selector {
+  height: 1.25rem ;
+  width: 1.25rem ;
+  border: 0.063rem solid hsl(231, 11%, 63%);
+  position: relative;
+  border-radius: 0.313rem ;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addon-selector .check-icon {
+  display: none;
+}
+
+.addon-selector.selected {
+  background-color: #443EFF;
+  border: none;
+}
+
+.addon-selector.selected .check-icon {
+  display: block;
+  color: white;
+}
+
+.addon-price {
+  color: #4C4299;
+  margin-left: auto;
+}
+
+.summary-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem ;
+  padding: 1.25rem ;
+  background-color: #F8F9FE;
+  border-radius: 0.625rem ;
+}
+
+.summary-subscription {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summary-subscription-title, .summary-subscription-price {
+  font-weight: 700;
+  color: hsl(213, 96%, 18%);
+}
+
+.summary-subscription-title::first-letter {
+  text-transform: uppercase;
+}
+
+.summary-subscription-change {
+  text-decoration: underline;
+  color: hsl(231, 11%, 63%);
+} 
+
+.summary-subscription-change:hover {
+  cursor: pointer;
+  color: hsl(213, 96%, 18%);
+}
+
+.summary-addon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summary-divider {
+  width: 100%;
+  height: 0.063rem;
+  background-color: hsl(231, 11%, 63%);
+}
+
+.summary-addons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem ;
+}
+
+.summary-addon-price {
+  color: #174A8B;
+}
+
+.total {
+  padding: 1.25rem ;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summary-addon-title, .total-title {
+  color: hsl(231, 11%, 63%);
+}
+
+.total-price {
+  font-size: 1.313rem;
+  font-weight: 700;
+  color: #443EFF;
+}
+
+.final-step-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  padding: 1.875rem ;
+}
+
+.final-step-icon {
+  margin-bottom: 4vh;
+}
+
+.final-step-title {
+  font-size: 2rem;
+  margin-bottom: 2vh;
+  color: hsl(213, 96%, 18%);
+}
+
+.final-step-text {
+  font-size: 1.063rem;
+  line-height: 1.5em;
+  color: hsl(231, 11%, 63%);
+}
+
+.attribution, .attribution a {
+  margin-top: 3vh;
+  color: hsl(231, 11%, 63%);
+  text-align: center;
+}
+.attribution a:hover {
+  cursor: pointer;
+  color: hsl(213, 96%, 18%);
+}
+
+
+@media screen and (max-width: 60rem) {
+  #app {
+    position: relative;
+    justify-content: start;
+  }
+
+  .attribution {
+    display: none;
+  }
+
+  main {
+    background: url('/images/bg-sidebar-mobile.svg') no-repeat;
+    background-position: 0 0;
+    background-size: 100% auto;
+    flex-direction: column;
+    width: 100%;
+    background-color: #EEF5FF;
+  }
+
+  p {
+    font-size: 0.8rem;
+  }
+
+  .sidebar {
+    background: none;
+    width: 100%;
+    height: 10vh;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding-block: 0.625rem ;
+    gap: 0.625rem ;
+  }
+  .step-text {
+    display: none;
+  }
+
+  .step-content {
+    height: fit-content;
+  }
+
+  .step-container {
+    padding: 0;
+    background-color: white;
+    height: fit-content;
+    padding: 1.25rem ;
+    border-radius: 0.625rem ;
+  }
+
+  .step-title {
+    font-size: 1.5rem;
+  }
+  .step-description {
+    font-size: 0.8rem;
+  }
+
+  .step-buttons-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding-block: 1.25rem ;
+    background-color: white;
+  }
+
+  .next-step-btn {
+    padding: 0.625rem 1.25rem ;
+  }
+
+  .plan-content {
+    gap: 1vh;
+  }
+
+  .plan-cards-wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, 1fr);
+    row-gap: 1vh;
+    margin: 0;
+  }
+  
+
+  .slider-wrapper {
+    margin: 0;
+  }
+
+  .plan-card  {
+    flex-direction: row;
+    align-items: center;
+    min-height: fit-content;
+    padding: 1.25rem ;
+    padding-block: 0.938rem ;
+    gap: 3vw;
+  }
+
+  .plan-icon {
+    margin: 0;
+  }
+
+  .plan-info {
+    gap: 1vh
+  }
+
+  .plan-title {
+    font-size: 1rem;
+  }
+
+  .addon-item {
+    padding: 1.25rem ;
+    padding-inline: 0.625rem ;
+    gap: 0.625rem ;
+  }
+
+  .addon-title {
+    font-size: 1rem;
+  }
+
+  .final-step-content {
+    background-color: white;
+    border-radius: 0.625rem ;
+  }
+
+  .final-step-text {
+    font-size: 0.87rem;
+  }
+
+}
+</style>
